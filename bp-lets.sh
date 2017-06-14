@@ -56,6 +56,7 @@ elif [[ $action = "create-account" ]]; then
 		exit 1
 	fi
 
+	mkdir -p "${xbasedir}"
 	openssl genrsa "$acckeysize" > "$acckey"
 	if [[ $? = 0 ]]; then
 		printf "Key successfully generated.\n"
@@ -116,6 +117,8 @@ elif [[ $action = "create-cert" ]]; then
 	printf "Linking intermediate cert...\n"
 	ln -s ../intermediate.pem
 
-	printf "Use '%s renew %s' now to request the new certificate..." "$0" "$1"
+	printf "Use '%s renew %s' now to request the new certificate..." "$0" "$2"
+
+	printf "%s\n" "$2" >> "${xbasedir}/active"
 
 fi
