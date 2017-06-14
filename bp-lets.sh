@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-if [[ -z "$2" ]]; then
+if { [[ -z "$2" ]] && [[ $1 != "create-account"  ]] } || [[ -z "$1" ]]; then
 	printf "Usage: %s <action> <certname>\n" "$0" >&2
 	exit 1
 fi
@@ -26,7 +26,7 @@ keysize=4096
 if [[ $action = "renew" ]]; then
 	if [[ ! -d "$basedir" ]]; then
 		printf "ERROR: %s does not exist!\n" "$basedir" >&2
-		printf "Unable to renew non-existend certificate!\n" >&2
+		printf "Unable to renew non-existent certificate!\n" >&2
 		exit 1
 	fi
 
