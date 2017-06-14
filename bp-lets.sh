@@ -40,6 +40,7 @@ if [[ $action = "renew" ]]; then
 		cp -ar "${basedir}/private.key"      "${newdir}/private.key"
 		cp -ar "${basedir}/intermediate.pem" "${newdir}/ca-bundle.crt"
 		cat    "${newdir}/certificate.crt"   "${newdir}/ca-bundle.crt" > "${newdir}/full-bundle.crt"
+		cat    "${newdir}/private.key"       "${newdir}/certificate.crt"   "${newdir}/ca-bundle.crt" > "${newdir}/key-bundle.crt"
 
 		cd "${basedir}"
 		ln -Tfs "${newdir}" live
