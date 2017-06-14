@@ -114,6 +114,11 @@ elif [[ $action = "create-cert" ]]; then
 		openssl req -new -sha256 -key "private.key" -subj "${subject}" > request.csr
 	fi
 
+	if [[ ! -e ../intermediate.pem ]]; then
+		printf "Downloading intermediate cert...\n"
+		wget https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem.txt -O ../intermediate.pem
+	fi
+
 	printf "Linking intermediate cert...\n"
 	ln -s ../intermediate.pem
 
