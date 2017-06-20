@@ -11,9 +11,10 @@ I *very* *strongly* recommend you to read it before using this!
 
 1. Clone this repository
 2. Install acme-tiny somewhere on your system.
-3. Open bp-lets.zsh using your favourite editor and set the variables to your liking.<br>
+3. Make sure openssl is installed on your system.
+4. Open bp-lets.zsh using your favourite editor and set the variables to your liking.<br>
    See the Confuguration section for more information and don't forget to set the path to acme_tiny.py!
-4. Create an account key if you haven't got one yet. (See create-account action below)
+5. Create an account key if you haven't got one yet. (See create-account action below)
 
 ## Actions
 
@@ -49,6 +50,23 @@ and you've created the CSR preferably using `create-cert` before calling this.
 
 See `cron_letsencrypt_renew.sh` for an example of automatic renewing using this.
 
+After this you can point your services configuration to the certificate using the following path:<br>
+`$xbasedir/<certname>/live/`<br>
+It'll contain the following files:
+
+    * private.key      the private key
+    * certificate.crt  the certificate
+    * ca-bundle.crt    the intermediate(s)
+    * full-bundle.crt  the certificate + the intermediate(s)
+    * key-bundle.crt   the private key + the certificate + the intermediates
+
+An example apache configuration could look like this:
+
+    SSLEngine On
+    SSLCertificateFile      /home/bp/letse/ssl.example.org/live/certificate.crt
+    SSLCertificateKeyFile   /home/bp/letse/ssl.example.org/live/private.key
+    SSLCertificateChainFile /home/bp/letse/ssl.example.org/live/ca-bundle.crt
+
 
 ## Configuration
 
@@ -62,9 +80,13 @@ When creating the key, this is the file it'll be written to.<br>
 When requesting certificates, the account key will be read from this file.<br>
 It is passed to acme-tiny via `--account-key`.
 
+Default_: $xbasedir/account.key
+
 ### acckeysize
 
-The size in bits of the account key. Only used when generating an account key.<br>
+The size in bits of the account key. Only used when generating an account key.
+
+Default: 4096
 
 ### acmebin
 
@@ -72,14 +94,54 @@ The path to the acme-tiny script.<br>
 Point this varibale to the location of the acme-tiny script on your machine.<br>
 For example: `/usr/local/bin/acme-tiny.py`
 
+Default: ${HOME}/acme-tiny/acme_tiny.py
+
 ### acmedir
 
 The path to the callenges directory.<br>
 This directory must be served at `http://<domain>/.well-known/acme-challenge/`.<br>
 It is passed to acme-tiny via `--acme-dir`.
 
+Default: /srv/acme-challenges/
+
 ### basedir
 
-The path where a certificate's files are stored.<br>
+The path where a certificate's files are stored.
+
 Default: `$xbasedir/<certname>`<br>
 <certname> is the identifier of the certificate.
+
+### keysize
+
+The size in bit of the RSA private keys generated for new certificates.
+Default: 4096
+
+### livedir
+
+Symlink to the currently active version of the certificate.
+
+Default: $basedir/live
+
+### newdir
+
+Directory to place the new certificate in, $livedir will be symlinked to this directory if renewal is successful.
+
+Default: $basedir/YYYY-MM-DD
+
+(YYYY-MM-DD is the date of the request/renewal of that version of the certificate)
+
+### openssl_cnf
+
+The location of the openssl.cnf used for adding SANs to the csr.
+
+Default: /etc/ssl/openssl.cnf
+
+### services
+
+List of services to be reloaded after successful `renew`. Will be passed to `systemctl reload`.
+
+### xbasedir
+
+Basic base directory. Directory containing each certificates subdirectory. Also contains the file `active` to which all certificated created with `create-cert` are added.
+
+Default: ${HOME}/letse
