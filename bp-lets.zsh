@@ -1,26 +1,81 @@
 #!/bin/zsh
 
+## Copyright (c) 2017 brainpower <brainpower at mailbox dot org>
+##
+## Permission is hereby granted, free of charge, to any person obtaining a copy
+## of this software and associated documentation files (the "Software"), to deal
+## in the Software without restriction, including without limitation the rights
+## to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+## copies of the Software, and to permit persons to whom the Software is
+## furnished to do so, subject to the following conditions:
+##
+## The above copyright notice and this permission notice shall be included in
+## all copies or substantial portions of the Software.
+##
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+## THE SOFTWARE.
+
 if { [[ -z "$2" ]] && [[ $1 != "create-account"  ]] } || [[ -z "$1" ]]; then
-	printf "Usage: %s <action> <certname>\n" "$0" >&2
+	printf "Usage: \n"
+	printf "   %s create-account\n" "$0" >&2
+	printf "   %s create-certificate <certname>\n" "$0" >&2
+	printf "   %s renew              <certname>\n" "$0" >&2
+	printf "\n"
+	printf "Actions:\n"
+	printf "   create-account  Generates the Let's Encrypt account key.\n"
+	printf "   create-cert     Generates a private key and a CSR for a certificate. <certname> should be an unique identifier for the certificate.\n"
+	printf "   renew           Request a new or renew an old certificate using acme-tiny.\n"
 	exit 1
 fi
 action="$1"
+certname="$2"
 
+#########################
+#  BEGIN configuration  #
+#########################
+
+# services to be reloaded after renewal
 services=(httpd dovecot postfix)
 
+# directory served at http://<domain>/.well-known/acme-challenge/
 acmedir="/srv/acme-challenges/"
+
+# location of the acme-tiny python script
 acmebin="${HOME}/acme-tiny/acme_tiny.py"
 
-openssl_cnf="/etc/ssl/openssl.cnf"
-
+# directory containing the certificate subdirectories
 xbasedir="${HOME}/letse"
-basedir="${xbasedir}/$2"
+
+# absolute path of the certificate subdirectory
+basedir="${xbasedir}/${certname}"
+
+# absolute directory to place the new certificate in,
+# $livedir will be symlinked to this directory if renewal is successful
 newdir="${basedir}/$(date +%F)"
+
+# path of the symlink to $newdir
 livedir="${basedir}/live"
 
+# path to the Let's Encrypt account key
 acckey="${xbasedir}/account.key"
+
+# size of the account key in bits (only used by "create-account" action)
 acckeysize=4096
+
+# size of the certificate's private key (only used by "create-certificate")
 keysize=4096
+
+# the location of the openssl.cnf used for adding SANs to the csr
+openssl_cnf="/etc/ssl/openssl.cnf"
+
+#######################
+#  END configuration  #
+#######################
 
 
 if [[ $action = "renew" ]]; then
@@ -122,8 +177,8 @@ elif [[ $action = "create-cert" ]]; then
 	printf "Linking intermediate cert...\n"
 	ln -s ../intermediate.pem
 
-	printf "Use '%s renew %s' now to request the new certificate..." "$0" "$2"
+	printf "Use '%s renew %s' now to request the new certificate..." "$0" "${certname}"
 
-	printf "%s\n" "$2" >> "${xbasedir}/active"
+	printf "%s\n" "${certname}" >> "${xbasedir}/active"
 
 fi
