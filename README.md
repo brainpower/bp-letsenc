@@ -128,7 +128,7 @@ Directory to place the new certificate in, $livedir will be symlinked to this di
 
 Default: $basedir/YYYY-MM-DD
 
-(YYYY-MM-DD is the date of the request/renewal of that version of the certificate)
+(YYYY-MM-DD is the current date)
 
 ### openssl_cnf
 
