@@ -22,13 +22,13 @@ These actions are:
 
 ### create-account
 
-   ./bp-lets.zsh create-account
+    ./bp-lets.zsh create-account
 
 This command generates a new account key if it does not exist.
 
 ### create-cert <certname>
 
-   ./bp-lets.zsh create-cert ssl.example.org
+    ./bp-lets.zsh create-cert ssl.example.org
 
 This command generates a new private key and a CSR locally identified by 'ssl.example.org'.
 You can choose whatever identifier you want here, it is only used by this script.
@@ -38,7 +38,7 @@ Put each domain on a single line; an empty line will submit. The domainns will b
 
 ### renew <certname>
 
-   ./bp-lets.zsh renew ssl.example.org
+    ./bp-lets.zsh renew ssl.example.org
 
 This command will request a new certificate using acme-tiny and the CSR identified by ssl.example.org,
 effectively renewing the certificate, if it already exists.
