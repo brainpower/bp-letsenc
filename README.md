@@ -80,7 +80,7 @@ When creating the key, this is the file it'll be written to.<br>
 When requesting certificates, the account key will be read from this file.<br>
 It is passed to acme-tiny via `--account-key`.
 
-Default_: $xbasedir/account.key
+Default: $xbasedir/account.key
 
 ### acckeysize
 
@@ -109,11 +109,12 @@ Default: /srv/acme-challenges/
 The path where a certificate's files are stored.
 
 Default: `$xbasedir/<certname>`<br>
-<certname> is the identifier of the certificate.
+certname is the identifier of the certificate.
 
 ### keysize
 
 The size in bit of the RSA private keys generated for new certificates.
+
 Default: 4096
 
 ### livedir
@@ -142,6 +143,6 @@ List of services to be reloaded after successful `renew`. Will be passed to `sys
 
 ### xbasedir
 
-Basic base directory. Directory containing each certificates subdirectory. Also contains the file `active` to which all certificated created with `create-cert` are added.
+Basic base directory. Directory containing each certificates subdirectory. Also contains the file `active` to which all certificates created with `create-cert` are added.
 
 Default: ${HOME}/letse
