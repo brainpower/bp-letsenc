@@ -86,6 +86,7 @@ if [[ $action = "renew" ]]; then
 	fi
 
 	mkdir -p "${newdir}"
+	chmod 700 "${newdir}"
 	cd "${newdir}"
 
 	python "${acmebin}" --account-key "${acckey}" --acme-dir "${acmedir}" --csr "${basedir}/request.csr" > certificate.crt
@@ -112,6 +113,7 @@ elif [[ $action = "create-account" ]]; then
 	fi
 
 	mkdir -p "${xbasedir}"
+	chmod 700 "${xbasedir}"
 	openssl genrsa "$acckeysize" > "$acckey"
 	if [[ $? = 0 ]]; then
 		printf "Key successfully generated.\n"
@@ -145,6 +147,7 @@ elif [[ $action = "create-cert" ]]; then
 
 
 	mkdir -p "$basedir"
+	chmod 700 "${basedir}"
 	cd "${basedir}" || exit 1
 
 	subject="/CN=${domains[1]}"
