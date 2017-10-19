@@ -34,10 +34,11 @@ if { [[ -z "$2" ]] && [[ $1 != "create-account"  ]] } || [[ -z "$1" ]]; then
 fi
 action="$1"
 certname="$2"
+script_dir="$(dirname $(readlink -f "${0}"))"
 
-#########################
-#  BEGIN configuration  #
-#########################
+#################################
+#  BEGIN default configuration  #
+#################################
 
 # services to be reloaded after renewal
 services=(httpd dovecot postfix)
@@ -73,10 +74,20 @@ keysize=4096
 # the location of the openssl.cnf used for adding SANs to the csr
 openssl_cnf="/etc/ssl/openssl.cnf"
 
+if [[ -r "${script_dir}/config.zsh" ]]; then
+	source "${script_dir}/config.zsh"
+fi
+
 #######################
 #  END configuration  #
 #######################
 
+function check_file_readable() {
+	if [[ ! -r "$1" ]]; then
+		printf "ERROR: Required file %s is missing or not readable!" "$1" >&2
+		exit 1
+	fi
+}
 
 if [[ $action = "renew" ]]; then
 	if [[ ! -d "$basedir" ]]; then
@@ -84,6 +95,10 @@ if [[ $action = "renew" ]]; then
 		printf "Unable to renew non-existent certificate!\n" >&2
 		exit 1
 	fi
+
+	check_file_readable "${basedir}/private.key"
+	check_file_readable "${basedir}/intermediate.pem"
+	check_file_readable "${basedir}/request.csr"
 
 	mkdir -p "${newdir}"
 	chmod 700 "${newdir}"

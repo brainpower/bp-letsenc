@@ -1,0 +1,44 @@
+# This is the example configuration fpr bp-lets.zsh
+# To use this, copy it: cp -a config.zsh.example config.zsh
+# and uncomment and change to any desired value
+#
+#  vim: set noet ft=zsh sts=2 sw=2 ts=2 :
+
+
+# DEPRECATED: use pre.d/* and post.d/* scripts instead!
+# services to be reloaded after renewal
+#services=(httpd dovecot postfix)
+
+# directory served at http://<domain>/.well-known/acme-challenge/
+#acmedir="/srv/acme-challenges/"
+
+# location of the acme-tiny python script
+#acmebin="${HOME}/acme-tiny/acme_tiny.py"
+
+# directory containing the certificate subdirectories
+#xbasedir="${HOME}/letse"
+
+# absolute path of the certificate subdirectory
+#basedir="${xbasedir}/${certname}"
+
+# absolute directory to place the new certificate in,
+# $livedir will be symlinked to this directory if renewal is successful
+#newdir="${basedir}/$(date +%F)"
+
+# path of the symlink to $newdir
+#livedir="${basedir}/live"
+
+# path to the Let's Encrypt account key
+#acckey="${xbasedir}/account.key"
+
+# size of the account key in bits (only used by "create-account" action)
+#acckeysize=4096
+
+# size of the certificate's private key (only used by "create-certificate")
+#keysize=4096
+
+# the location of the openssl.cnf used for adding SANs to the csr
+#openssl_cnf="/etc/ssl/openssl.cnf"
+
+
+
