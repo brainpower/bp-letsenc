@@ -40,5 +40,7 @@
 # the location of the openssl.cnf used for adding SANs to the csr
 #openssl_cnf="/etc/ssl/openssl.cnf"
 
+# cronjob: renew X days prior to expiry of crt
+#renew_before=20
 
 

@@ -20,19 +20,23 @@
 ## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ## THE SOFTWARE.
 
+script_dir="$(dirname $(readlink -f "${0}"))"
+
 # directory containing the certificate subdirectories
-basedir="${HOME}/letse/"
+xbasedir="${HOME}/letse/"
 
 # renew X days prior to expiry of crt
 renew_before=20
 
+# read configuration from config.zsh if readable
+if [[ -r "${script_dir}/config.zsh" ]]; then
+	source "${script_dir}/config.zsh"
+fi
 
 
-script_dir="$(dirname $(readlink -f "${0}"))"
+for cert in $(cat "${xbasedir}"/active); do
 
-for cert in $(cat "${basedir}"/active); do
-
-	expiresAt="$(date -d "$(openssl x509 -in "${basedir}/${cert}/live/certificate.crt" -noout -enddate | sed s/notAfter=//g)" +%s)"
+	expiresAt="$(date -d "$(openssl x509 -in "${xbasedir}/${cert}/live/certificate.crt" -noout -enddate | sed s/notAfter=//g)" +%s)"
 	now="$(date +%s)"
 
 	diff=$(( expiresAt - now  ))
