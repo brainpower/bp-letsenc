@@ -40,8 +40,9 @@ script_dir="$(dirname $(readlink -f "${0}"))"
 #  BEGIN default configuration  #
 #################################
 
+# DEPRECATED: use a post-renew.d/ script
 # services to be reloaded after renewal
-services=(httpd dovecot postfix)
+services=()
 
 # directory served at http://<domain>/.well-known/acme-challenge/
 acmedir="/srv/acme-challenges/"
@@ -116,7 +117,16 @@ if [[ $action = "renew" ]]; then
 		cd "${basedir}"
 		ln -Tfs "${newdir}" live
 
-		sudo systemctl reload "${services[@]}"
+		if [[ -n "${services}" ]]; then
+			sudo systemctl reload "${services[@]}"
+		fi
+		if [[ -d "${script_dir}/post-renew.d/" ]]; then
+			find "${script_dir}/post-renew.d/" -type f -print0 | while read -d $'\0' dfile; do
+				if [[ -x "$dfile" ]]; then
+					"$dfile" "${basedir}/live/"
+				fi
+			done
+		fi
 	fi
 
 

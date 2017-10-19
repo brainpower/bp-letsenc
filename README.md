@@ -67,10 +67,19 @@ An example apache configuration could look like this:
     SSLCertificateKeyFile   /home/bp/letse/ssl.example.org/live/private.key
     SSLCertificateChainFile /home/bp/letse/ssl.example.org/live/ca-bundle.crt
 
+Any executable file residing in the post-renew.d directory alongside bp-lets.zsh will be executed after
+the new certificate and all bundle files were created.
+All non-executable files are silently ignored.
+The directory the new certificate resides in (`$xbasedir/<certname>/live/`) will be passed as the first argument.
+
+Any output on stdout or stderr will "bleed through" and displayed, even by the cron script.
+Therefore you should only print error messages or other serious issues, as any output by cronjobs might be mailed to someone.
 
 ## Configuration
 
-Configuration is done through setting the variables in the configuration block of bp-lets.zsh.
+Configuration is done through setting the variables in config.zsh.
+To use the example config copy or rename config.zsh.example to config.zsh.
+
 The variables and their effects are:
 
 ### acckey

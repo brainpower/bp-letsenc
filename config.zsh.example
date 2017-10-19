@@ -5,7 +5,7 @@
 #  vim: set noet ft=zsh sts=2 sw=2 ts=2 :
 
 
-# DEPRECATED: use pre.d/* and post.d/* scripts instead!
+# DEPRECATED: use a post-renew.d/ script instead!
 # services to be reloaded after renewal
 #services=(httpd dovecot postfix)
 
