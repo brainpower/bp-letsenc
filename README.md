@@ -67,7 +67,7 @@ An example apache configuration could look like this:
     SSLCertificateKeyFile   /home/bp/letse/ssl.example.org/live/private.key
     SSLCertificateChainFile /home/bp/letse/ssl.example.org/live/ca-bundle.crt
 
-Any executable file residing in the post-renew.d directory alongside bp-lets.zsh will be executed after
+Any executable file residing in the `post-renew.d` directory alongside `bp-lets.zsh` will be executed after
 the new certificate and all bundle files were created.
 All non-executable files are silently ignored.
 The directory the new certificate resides in (`$xbasedir/<certname>/live/`) will be passed as the first argument.
