@@ -125,7 +125,7 @@ if [[ $action = "renew" ]]; then
 		if [[ -d "${script_dir}/post-renew.d/" ]]; then
 			find "${script_dir}/post-renew.d/" -type f -print0 | while read -d $'\0' dfile; do
 				if [[ -x "$dfile" ]]; then
-					"$dfile" "${basedir}/live/"
+					"$dfile" "${basedir}/live/" "$certname"
 				fi
 			done
 		fi
