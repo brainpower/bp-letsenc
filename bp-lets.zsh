@@ -20,16 +20,18 @@
 ## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ## THE SOFTWARE.
 
-if { [[ -z "$2" ]] && [[ $1 != "create-account"  ]] } || [[ -z "$1" ]]; then
-	printf "Usage: \n"
+if [[ $1 =~ "help" ]] || { [[ -z "$2" ]] && [[ $1 != "create-account"  ]] } || [[ -z "$1" ]]; then
+	printf "Usage: \n" >&2
 	printf "   %s create-account\n" "$0" >&2
 	printf "   %s create-certificate <certname>\n" "$0" >&2
+	printf "   %s help\n" "$0" >&2
 	printf "   %s renew              <certname>\n" "$0" >&2
-	printf "\n"
-	printf "Actions:\n"
-	printf "   create-account  Generates the Let's Encrypt account key.\n"
-	printf "   create-cert     Generates a private key and a CSR for a certificate. <certname> should be an unique identifier for the certificate.\n"
-	printf "   renew           Request a new or renew an old certificate using acme-tiny.\n"
+	printf "\n" >&2
+	printf "Actions:\n" >&2
+	printf "   create-account  Generates the Let's Encrypt account key.\n" >&2
+	printf "   create-cert     Generates a private key and a CSR for a certificate. <certname> should be an unique identifier for the certificate.\n" >&2
+	printf "   help            Show this help.\n" >&2
+	printf "   renew           Request a new or renew an old certificate using acme-tiny.\n" >&2
 	exit 1
 fi
 action="$1"
