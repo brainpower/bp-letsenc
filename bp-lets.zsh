@@ -178,26 +178,20 @@ elif [[ $action = "create-cert" ]]; then
 	cd "${basedir}" || exit 1
 
 	subject="/CN=${domains[1]}"
-	if [[ ${#domains[@]} -gt 1 ]]; then
-		cp "${openssl_cnf}" openssl.cnf
-		printf "[SAN]\nsubjectAltName=" >> openssl.cnf
-		for dom in "${domains[@]}"; do
-			printf "DNS:%s," "$dom" >> openssl.cnf
-		done
-		printf "\n" >> openssl.cnf
-		sed '/subjectAltName/s@,$@@' -i openssl.cnf
-	fi
+	cp "${openssl_cnf}" openssl.cnf
+	printf "[SAN]\nsubjectAltName=" >> openssl.cnf
+	for dom in "${domains[@]}"; do
+		printf "DNS:%s," "$dom" >> openssl.cnf
+	done
+	printf "\n" >> openssl.cnf
+	sed '/subjectAltName/s@,$@@' -i openssl.cnf
 
 
 	printf "Generating new private key...\n"
 	openssl genrsa "$keysize" > "private.key"
 
 	printf "Generating new CSR...\n"
-	if [[ ${#domains[@]} -gt 1 ]]; then
-		openssl req -new -sha256 -key "private.key" -subj "${subject}" -reqexts SAN -config openssl.cnf > request.csr
-	else
-		openssl req -new -sha256 -key "private.key" -subj "${subject}" > request.csr
-	fi
+	openssl req -new -sha256 -key "private.key" -subj "${subject}" -reqexts SAN -config openssl.cnf > request.csr
 
 	if [[ ! -e ../intermediate.pem ]]; then
 		printf "Downloading intermediate cert...\n"
