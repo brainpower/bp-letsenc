@@ -91,6 +91,17 @@ function check_file_readable() {
 		exit 1
 	fi
 }
+function exec_post_renew_d(){
+	for dir in "$@"; do
+		if [[ -d "${dir}/post-renew.d/" ]]; then
+			find "${dir}/post-renew.d/" -type f -print0 | while read -d $'\0' dfile; do
+				if [[ -x "$dfile" ]]; then
+					"$dfile" "${basedir}/live/" "$certname"
+				fi
+			done
+		fi
+	done
+}
 
 if [[ $action = "renew" ]]; then
 	if [[ ! -d "$basedir" ]]; then
@@ -122,13 +133,7 @@ if [[ $action = "renew" ]]; then
 		if [[ -n "${services}" ]]; then
 			sudo systemctl reload "${services[@]}"
 		fi
-		if [[ -d "${script_dir}/post-renew.d/" ]]; then
-			find "${script_dir}/post-renew.d/" -type f -print0 | while read -d $'\0' dfile; do
-				if [[ -x "$dfile" ]]; then
-					"$dfile" "${basedir}/live/" "$certname"
-				fi
-			done
-		fi
+		exec_post_renew_d "${script_dir}" "${basedir}"
 	fi
 
 
