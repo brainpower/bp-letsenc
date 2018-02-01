@@ -60,7 +60,7 @@ function do_reply(){
 			error404
 		fi
 
-		size="$(stat --format '%s' "${acmedir}/${file}")"
+		size="$(stat --format '%s' "/${file}")"
 
 		# http headers
 		printf "HTTP/1.1 200 Not Found\n"
@@ -71,7 +71,7 @@ function do_reply(){
 		printf "\n"
 
 		# http body
-	  cat "/var/www/acme-challenges/${file}"
+	  cat "${acmedir}/${file}"
 	fi
 
 }
