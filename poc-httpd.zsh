@@ -24,7 +24,7 @@ case $1 in
 	start)
 		if ! [[ -r "${pidfile}" ]]; then
 			socat TCP-LISTEN:80,crlf,reuseaddr,fork SYSTEM:"$0 reply" &
-			printf "%s" > ${pidfile}
+			printf "%s" "$!" > ${pidfile}
 		else
 			echo "Pidfile exists. Already started?"
 			exit 1
