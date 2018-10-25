@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-## Copyright (c) 2017 brainpower <brainpower at mailbox dot org>
+## Copyright (c) 2017-2018 brainpower <brainpower at mailbox dot org>
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,12 @@ action="$1"
 certname="$2"
 script_dir="$(dirname $(readlink -f "${0}"))"
 
+function set_if_unset() {
+	if [[ -z "${(P)1}" ]]; then
+		eval "${1}=${2}"
+	fi
+}
+
 #################################
 #  BEGIN default configuration  #
 #################################
@@ -46,40 +52,41 @@ script_dir="$(dirname $(readlink -f "${0}"))"
 # services to be reloaded after renewal
 services=()
 
-# directory served at http://<domain>/.well-known/acme-challenge/
-acmedir="/srv/acme-challenges/"
-
-# location of the acme-tiny python script
-acmebin="${HOME}/acme-tiny/acme_tiny.py"
-
-# directory containing the certificate subdirectories
-xbasedir="${HOME}/letse"
-
-# absolute path of the certificate subdirectory
-basedir="${xbasedir}/${certname}"
-
-# absolute directory to place the new certificate in,
-# $livedir will be symlinked to this directory if renewal is successful
-newdir="${basedir}/$(date +%F)"
-
-# path of the symlink to $newdir
-livedir="${basedir}/live"
-
-# path to the Let's Encrypt account key
-acckey="${xbasedir}/account.key"
-
-# size of the account key in bits (only used by "create-account" action)
-acckeysize=4096
-
-# size of the certificate's private key (only used by "create-certificate")
-keysize=4096
-
-# the location of the openssl.cnf used for adding SANs to the csr
-openssl_cnf="/etc/ssl/openssl.cnf"
-
 if [[ -r "${script_dir}/config.zsh" ]]; then
 	source "${script_dir}/config.zsh"
 fi
+
+# directory served at http://<domain>/.well-known/acme-challenge/
+set_if_unset acmedir "/srv/acme-challenges/"
+
+# location of the acme-tiny python script
+set_if_unset acmebin "${HOME}/acme-tiny/acme_tiny.py"
+
+# directory containing the certificate subdirectories
+set_if_unset xbasedir "${HOME}/letse"
+
+# absolute path of the certificate subdirectory
+set_if_unset basedir "${xbasedir}/${certname}"
+
+# absolute directory to place the new certificate in,
+# $livedir will be symlinked to this directory if renewal is successful
+set_if_unset newdir "${basedir}/$(date +%F)"
+
+# path of the symlink to $newdir
+set_if_unset livedir "${basedir}/live"
+
+# path to the Let's Encrypt account key
+set_if_unset acckey "${xbasedir}/account.key"
+
+# size of the account key in bits (only used by "create-account" action)
+set_if_unset acckeysize 4096
+
+# size of the certificate's private key (only used by "create-certificate")
+set_if_unset keysize 4096
+
+# the location of the openssl.cnf used for adding SANs to the csr
+set_if_unset openssl_cnf "/etc/ssl/openssl.cnf"
+
 
 #######################
 #  END configuration  #
@@ -115,7 +122,7 @@ if [[ $action = "renew" ]]; then
 	check_file_readable "${basedir}/request.csr"
 
 	mkdir -p "${newdir}"
-	chmod 700 "${newdir}"
+	chmod 750 "${newdir}"
 	cd "${newdir}"
 
 	python "${acmebin}" --account-key "${acckey}" --acme-dir "${acmedir}" --csr "${basedir}/request.csr" > certificate.crt
@@ -145,7 +152,7 @@ elif [[ $action = "create-account" ]]; then
 	fi
 
 	mkdir -p "${xbasedir}"
-	chmod 700 "${xbasedir}"
+	chmod 750 "${xbasedir}"
 	openssl genrsa "$acckeysize" > "$acckey"
 	if [[ $? = 0 ]]; then
 		printf "Key successfully generated.\n"
@@ -179,7 +186,7 @@ elif [[ $action = "create-cert" ]]; then
 
 
 	mkdir -p "$basedir"
-	chmod 700 "${basedir}"
+	chmod 750 "${basedir}"
 	cd "${basedir}" || exit 1
 
 	subject="/CN=${domains[1]}"
