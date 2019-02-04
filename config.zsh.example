@@ -16,7 +16,7 @@
 #acmebin="${HOME}/acme-tiny/acme_tiny.py"
 
 # directory containing the certificate subdirectories
-#xbasedir="${HOME}/letse"
+#xbasedir="/var/local/letse"
 
 # absolute path of the certificate subdirectory
 #basedir="${xbasedir}/${certname}"
@@ -27,6 +27,9 @@
 
 # path of the symlink to $newdir
 #livedir="${basedir}/live"
+
+# permissions to be set to $livedir, you can set it to anything chmod accepts
+#dirmode="750"
 
 # path to the Let's Encrypt account key
 #acckey="${xbasedir}/account.key"
@@ -42,5 +45,4 @@
 
 # cronjob: renew X days prior to expiry of crt
 #renew_before=20
-
 

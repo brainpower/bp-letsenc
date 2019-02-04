@@ -5,21 +5,25 @@ a small wrapper around acme-tiny for managing certificates
 acme-tiny can be found here: https://github.com/diafygi/acme-tiny
 
 Reding acme-tiny's documentation will be helpful for understanding this script.
-I *very* *strongly* recommend you to read it before using this!
+I **very** **strongly** recommend you to read it before using this!
+
+Also make sure you're using *at* *least* version 4.0.0 or newer of acme-tiny.
+Otherwise the intermediate certificate will be missing from the bundles.
 
 ## Installation
 
 1. Clone this repository
 2. Install acme-tiny somewhere on your system.
 3. Make sure openssl is installed on your system.
-4. Open bp-lets.zsh using your favourite editor and set the variables to your liking.<br>
-   See the Confuguration section for more information and don't forget to set the path to acme_tiny.py!
+4. Create `config.zsh` using `config.zsh.example` as template and set the variables to your liking.<br>
+   See the Confuguration section for more information and don't forget to set the path to acme_tiny.py!<br>
+   You can completely skip this, if you're fine with the defaults.
 5. Create an account key if you haven't got one yet. (See create-account action below)
 
 ## Actions
 
 The first argument to `bp-lets.zsh` is the action it shall perform.<br>
-These actions are:
+Possible actions are:
 
 ### create-account
 
@@ -35,7 +39,7 @@ This command generates a new private key and a CSR locally identified by 'ssl.ex
 You can choose whatever identifier you want here, it is only used by this script.
 It's usually a good idea to use the certificates main domain though.<br>
 The script will ask for the domains for which the certificate shall be valid.
-Put each domain on a single line; an empty line will submit. The domainns will be re-printed for checking.
+Put each domain on a single line; an empty line will submit. The domains will be re-printed for checking.
 
 ### renew <certname>
 
@@ -48,7 +52,7 @@ Make sure `http://<domain>/.well-known/acme-challenge/` is served correctly, <br
 you've got an account key <br>
 and you've created the CSR preferably using `create-cert` before calling this.
 
-See `cron_letsencrypt_renew.sh` for an example of automatic renewing using this.
+See `cron_letsencrypt_renew.sh` for an example of automatic renewing.
 
 After this you can point your services configuration to the certificate using the following path:<br>
 `$xbasedir/<certname>/live/`<br>
@@ -63,9 +67,9 @@ It'll contain the following files:
 An example apache configuration could look like this:
 
     SSLEngine On
-    SSLCertificateFile      /home/bp/letse/ssl.example.org/live/certificate.crt
-    SSLCertificateKeyFile   /home/bp/letse/ssl.example.org/live/private.key
-    SSLCertificateChainFile /home/bp/letse/ssl.example.org/live/ca-bundle.crt
+    SSLCertificateFile      /var/local/letse/ssl.example.org/live/certificate.crt
+    SSLCertificateKeyFile   /var/local/letse/ssl.example.org/live/private.key
+    SSLCertificateChainFile /var/local/letse/ssl.example.org/live/ca-bundle.crt
 
 Any executable file residing in the `post-renew.d` directory inside `$xbasedir/<certname>/` or alternatively alongside `bp-lets.zsh` will be executed after
 the new certificate and all bundle files were created.
@@ -154,4 +158,4 @@ List of services to be reloaded after successful `renew`. Will be passed to `sys
 
 Basic base directory. Directory containing each certificates subdirectory. Also contains the file `active` to which all certificates created with `create-cert` are added.
 
-Default: ${HOME}/letse
+Default: /var/local/letse

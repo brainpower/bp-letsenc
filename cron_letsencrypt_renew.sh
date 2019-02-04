@@ -23,7 +23,7 @@
 script_dir="$(dirname $(readlink -f "${0}"))"
 
 # directory containing the certificate subdirectories
-xbasedir="${HOME}/letse/"
+xbasedir="/var/local/letse/"
 
 # renew X days prior to expiry of crt
 renew_before=20

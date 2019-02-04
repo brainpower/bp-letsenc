@@ -70,7 +70,7 @@ set_if_unset acmedir "/srv/acme-challenges/"
 set_if_unset acmebin "${HOME}/acme-tiny/acme_tiny.py"
 
 # directory containing the certificate subdirectories
-set_if_unset xbasedir "${HOME}/letse"
+set_if_unset xbasedir "/var/local/letse"
 
 # absolute path of the certificate subdirectory
 set_if_unset basedir "${xbasedir}/${certname}"
