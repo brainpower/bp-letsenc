@@ -60,6 +60,9 @@ if [[ -r "${script_dir}/config.zsh" ]]; then
 	source "${script_dir}/config.zsh"
 fi
 
+# permissions to be set on the directory containing key and certificate
+set_if_unset dirmode "750"
+
 # directory served at http://<domain>/.well-known/acme-challenge/
 set_if_unset acmedir "/srv/acme-challenges/"
 
@@ -136,7 +139,7 @@ if [[ $action = "renew" ]]; then
 	  "${basedir}/request.csr"
 
 	mkdir -p "${newdir}"
-	chmod 750 "${newdir}"
+	chmod "${dirmode}" "${newdir}"
 	cd "${newdir}"
 
 	python "${acmebin}" --account-key "${acckey}" --acme-dir "${acmedir}" --csr "${basedir}/request.csr" > certificate.crt
@@ -166,7 +169,7 @@ elif [[ $action = "create-account" ]]; then
 	fi
 
 	mkdir -p "${xbasedir}"
-	chmod 750 "${xbasedir}"
+	chmod "${dirmode}" "${xbasedir}"
 	openssl genrsa "$acckeysize" > "$acckey"
 	if [[ $? = 0 ]]; then
 		printf "Key successfully generated.\n"
@@ -200,7 +203,7 @@ elif [[ $action = "create-cert" ]]; then
 
 
 	mkdir -p "$basedir"
-	chmod 750 "${basedir}"
+	chmod "${dirmode}" "${basedir}"
 	cd "${basedir}" || exit 1
 
 	subject="/CN=${domains[1]}"
