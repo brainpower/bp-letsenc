@@ -38,6 +38,10 @@ action="$1"
 certname="$2"
 script_dir="$(dirname $(readlink -f "${0}"))"
 
+
+# set a variable if it is unset or empty
+# $1: name of the variable
+# $2: value to be set
 function set_if_unset() {
 	if [[ -z "${(P)1}" ]]; then
 		eval "${1}=${2}"
@@ -88,16 +92,26 @@ set_if_unset keysize 4096
 set_if_unset openssl_cnf "/etc/ssl/openssl.cnf"
 
 
-#######################
-#  END configuration  #
-#######################
+###############################
+#  END default configuration  #
+###############################
 
-function check_file_readable() {
-	if [[ ! -r "$1" ]]; then
-		printf "ERROR: Required file %s is missing or not readable!" "$1" >&2
-		exit 1
-	fi
+
+# check if given files are readable, error out otherwise
+# $@: list of files
+function check_files_readable() {
+  local file
+  for file in "$@"; do
+    if [[ ! -r "$file" ]]; then
+      printf "ERROR: Required file %s is missing or not readable!" "$file" >&2
+      exit 1
+    fi
+  done
 }
+
+
+# execute scripts in post-renew.d if any exist
+# $@: a list of dirs with a post-renew.d folder with scripts in them
 function exec_post_renew_d(){
 	for dir in "$@"; do
 		if [[ -d "${dir}/post-renew.d/" ]]; then
@@ -117,9 +131,9 @@ if [[ $action = "renew" ]]; then
 		exit 1
 	fi
 
-	check_file_readable "${basedir}/private.key"
-	check_file_readable "${basedir}/intermediate.pem"
-	check_file_readable "${basedir}/request.csr"
+	check_files_readable \
+	  "${basedir}/private.key" \
+	  "${basedir}/request.csr"
 
 	mkdir -p "${newdir}"
 	chmod 750 "${newdir}"
