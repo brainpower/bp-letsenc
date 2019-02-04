@@ -173,6 +173,7 @@ if [[ $action = "renew" ]]; then
 	cd "${newdir}"
 
 	python "${acmebin}" \
+	  --quiet \
 	  --account-key "${acckey}" \
 	  --acme-dir "${acmedir}" \
 	  --csr "${basedir}/request.csr" \
