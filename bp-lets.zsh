@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-## Copyright (c) 2017-2018 brainpower <brainpower at mailbox dot org>
+## Copyright (c) 2017-2019 brainpower <brainpower at mailbox dot org>
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to deal
@@ -21,18 +21,18 @@
 ## THE SOFTWARE.
 
 if [[ $1 =~ "help" ]] || { [[ -z "$2" ]] && [[ $1 != "create-account"  ]] } || [[ -z "$1" ]]; then
-	printf "Usage: \n" >&2
-	printf "   %s create-account\n" "$0" >&2
-	printf "   %s create-certificate <certname>\n" "$0" >&2
-	printf "   %s help\n" "$0" >&2
-	printf "   %s renew              <certname>\n" "$0" >&2
-	printf "\n" >&2
-	printf "Actions:\n" >&2
-	printf "   create-account  Generates the Let's Encrypt account key.\n" >&2
-	printf "   create-cert     Generates a private key and a CSR for a certificate. <certname> should be an unique identifier for the certificate.\n" >&2
-	printf "   help            Show this help.\n" >&2
-	printf "   renew           Request a new or renew an old certificate using acme-tiny.\n" >&2
-	exit 1
+  printf "Usage: \n" >&2
+  printf "   %s create-account\n" "$0" >&2
+  printf "   %s create-certificate <certname>\n" "$0" >&2
+  printf "   %s help\n" "$0" >&2
+  printf "   %s renew              <certname>\n" "$0" >&2
+  printf "\n" >&2
+  printf "Actions:\n" >&2
+  printf "   create-account  Generates the Let's Encrypt account key.\n" >&2
+  printf "   create-cert     Generates a private key and a CSR for a certificate. <certname> should be an unique identifier for the certificate.\n" >&2
+  printf "   help            Show this help.\n" >&2
+  printf "   renew           Request a new or renew an old certificate using acme-tiny.\n" >&2
+  exit 1
 fi
 action="$1"
 certname="$2"
@@ -43,9 +43,9 @@ script_dir="$(dirname $(readlink -f "${0}"))"
 # $1: name of the variable
 # $2: value to be set
 function set_if_unset() {
-	if [[ -z "${(P)1}" ]]; then
-		eval "${1}=${2}"
-	fi
+  if [[ -z "${(P)1}" ]]; then
+    eval "${1}=${2}"
+  fi
 }
 
 #################################
@@ -57,7 +57,7 @@ function set_if_unset() {
 services=()
 
 if [[ -r "${script_dir}/config.zsh" ]]; then
-	source "${script_dir}/config.zsh"
+  source "${script_dir}/config.zsh"
 fi
 
 # permissions to be set on the directory containing key and certificate
@@ -116,15 +116,15 @@ function check_files_readable() {
 # execute scripts in post-renew.d if any exist
 # $@: a list of dirs with a post-renew.d folder with scripts in them
 function exec_post_renew_d(){
-	for dir in "$@"; do
-		if [[ -d "${dir}/post-renew.d/" ]]; then
-			find "${dir}/post-renew.d/" -type f -print0 | while read -d $'\0' dfile; do
-				if [[ -x "$dfile" ]]; then
-					"$dfile" "${basedir}/live/" "$certname"
-				fi
-			done
-		fi
-	done
+  for dir in "$@"; do
+    if [[ -d "${dir}/post-renew.d/" ]]; then
+      find "${dir}/post-renew.d/" -type f -print0 | while read -d $'\0' dfile; do
+        if [[ -x "$dfile" ]]; then
+          "$dfile" "${basedir}/live/" "$certname"
+        fi
+      done
+    fi
+  done
 }
 
 
@@ -158,110 +158,110 @@ function split_cert(){
 ##########
 
 if [[ $action = "renew" ]]; then
-	if [[ ! -d "$basedir" ]]; then
-		printf "ERROR: %s does not exist!\n" "$basedir" >&2
-		printf "Unable to renew non-existent certificate!\n" >&2
-		exit 1
-	fi
+  if [[ ! -d "$basedir" ]]; then
+    printf "ERROR: %s does not exist!\n" "$basedir" >&2
+    printf "Unable to renew non-existent certificate!\n" >&2
+    exit 1
+  fi
 
-	check_files_readable \
-	  "${basedir}/private.key" \
-	  "${basedir}/request.csr"
+  check_files_readable \
+    "${basedir}/private.key" \
+    "${basedir}/request.csr"
 
-	mkdir -p "${newdir}"
-	chmod "${dirmode}" "${newdir}"
-	cd "${newdir}"
+  mkdir -p "${newdir}"
+  chmod "${dirmode}" "${newdir}"
+  cd "${newdir}"
 
-	python "${acmebin}" \
-	  --quiet \
-	  --account-key "${acckey}" \
-	  --acme-dir "${acmedir}" \
-	  --csr "${basedir}/request.csr" \
-	    > "${newdir}/full-bundle.crt"
+  python "${acmebin}" \
+    --quiet \
+    --account-key "${acckey}" \
+    --acme-dir "${acmedir}" \
+    --csr "${basedir}/request.csr" \
+      > "${newdir}/full-bundle.crt"
 
-	if [[ $? == 0 ]]; then
+  if [[ $? == 0 ]]; then
 
     split_cert "${newdir}/full-bundle.crt" \
       "${newdir}/certificate.crt" \
       "${newdir}/ca-bundle.crt"
 
-		cp -a "${basedir}/private.key" "${newdir}/private.key"
-		cat   "${newdir}/private.key"  "${newdir}/full-bundle.crt" > "${newdir}/key-bundle.crt"
+    cp -a "${basedir}/private.key" "${newdir}/private.key"
+    cat   "${newdir}/private.key"  "${newdir}/full-bundle.crt" > "${newdir}/key-bundle.crt"
 
-		cd "${basedir}"
-		ln -Tfs "${newdir}" live
+    cd "${basedir}"
+    ln -Tfs "${newdir}" live
 
-		if [[ -n "${services}" ]]; then
-		  printf "WARNING: Using the services array is deprecated, use a post-renew.d script instead.\n" >&2
-			sudo systemctl reload "${services[@]}"
-		fi
-		exec_post_renew_d "${script_dir}" "${basedir}"
-	fi
+    if [[ -n "${services}" ]]; then
+      printf "WARNING: Using the services array is deprecated, use a post-renew.d script instead.\n" >&2
+      sudo systemctl reload "${services[@]}"
+    fi
+    exec_post_renew_d "${script_dir}" "${basedir}"
+  fi
 
 
 elif [[ $action = "create-account" ]]; then
-	if [[ -f $acckey ]]; then
-		printf "ERROR: Account Key already exists: %s\n" "$acckey" >&2
-		printf "If you really want to create a new one, delete it first!\n" >&2
-		exit 1
-	fi
+  if [[ -f $acckey ]]; then
+    printf "ERROR: Account Key already exists: %s\n" "$acckey" >&2
+    printf "If you really want to create a new one, delete it first!\n" >&2
+    exit 1
+  fi
 
-	mkdir -p "${xbasedir}"
-	chmod "${dirmode}" "${xbasedir}"
-	openssl genrsa "$acckeysize" > "$acckey"
-	if [[ $? = 0 ]]; then
-		printf "Key successfully generated.\n"
-	fi
+  mkdir -p "${xbasedir}"
+  chmod "${dirmode}" "${xbasedir}"
+  openssl genrsa "$acckeysize" > "$acckey"
+  if [[ $? = 0 ]]; then
+    printf "Key successfully generated.\n"
+  fi
 
 
 elif [[ $action = "create-cert" ]]; then
-	if [[ -d "$basedir" ]]; then
-		printf "ERROR: %s already exists!\n" "$basedir" >&2
-		printf "If you really want a new certificate, give it another name or remove the existing one.\n" >&2
-		exit 1
-	fi
+  if [[ -d "$basedir" ]]; then
+    printf "ERROR: %s already exists!\n" "$basedir" >&2
+    printf "If you really want a new certificate, give it another name or remove the existing one.\n" >&2
+    exit 1
+  fi
 
-	domains=()
-	printf "Please enter all domains you want (don't forget www. !; empty string submits):\n"
-	while IFS= read -r dom; do
-		if [[ -z "$dom" ]]; then
-			break
-		fi
-		domains+=( "$dom" )
-	done
-	printf "Entered domains are:\n"
-	for dom in "${domains[@]}"; do
-		printf "* '%s'\n" $dom
-	done
-	printf "Continue? [Yn] "
-	read
-	if [[ $REPLY =~ [Nn][Oo]* ]]; then
-		exit 1
-	fi
-
-
-	mkdir -p "$basedir"
-	chmod "${dirmode}" "${basedir}"
-	cd "${basedir}" || exit 1
-
-	subject="/CN=${domains[1]}"
-	cp "${openssl_cnf}" openssl.cnf
-	printf "[SAN]\nsubjectAltName=" >> openssl.cnf
-	for dom in "${domains[@]}"; do
-		printf "DNS:%s," "$dom" >> openssl.cnf
-	done
-	printf "\n" >> openssl.cnf
-	sed '/subjectAltName/s@,$@@' -i openssl.cnf
+  domains=()
+  printf "Please enter all domains you want (don't forget www. !; empty string submits):\n"
+  while IFS= read -r dom; do
+    if [[ -z "$dom" ]]; then
+      break
+    fi
+    domains+=( "$dom" )
+  done
+  printf "Entered domains are:\n"
+  for dom in "${domains[@]}"; do
+    printf "* '%s'\n" $dom
+  done
+  printf "Continue? [Yn] "
+  read
+  if [[ $REPLY =~ [Nn][Oo]* ]]; then
+    exit 1
+  fi
 
 
-	printf "Generating new private key...\n"
-	openssl genrsa "$keysize" > "private.key"
+  mkdir -p "$basedir"
+  chmod "${dirmode}" "${basedir}"
+  cd "${basedir}" || exit 1
 
-	printf "Generating new CSR...\n"
-	openssl req -new -sha256 -key "private.key" -subj "${subject}" -reqexts SAN -config openssl.cnf > request.csr
+  subject="/CN=${domains[1]}"
+  cp "${openssl_cnf}" openssl.cnf
+  printf "[SAN]\nsubjectAltName=" >> openssl.cnf
+  for dom in "${domains[@]}"; do
+    printf "DNS:%s," "$dom" >> openssl.cnf
+  done
+  printf "\n" >> openssl.cnf
+  sed '/subjectAltName/s@,$@@' -i openssl.cnf
 
-	printf "Use '%s renew %s' now to request the new certificate..." "$0" "${certname}"
 
-	printf "%s\n" "${certname}" >> "${xbasedir}/active"
+  printf "Generating new private key...\n"
+  openssl genrsa "$keysize" > "private.key"
+
+  printf "Generating new CSR...\n"
+  openssl req -new -sha256 -key "private.key" -subj "${subject}" -reqexts SAN -config openssl.cnf > request.csr
+
+  printf "Use '%s renew %s' now to request the new certificate..." "$0" "${certname}"
+
+  printf "%s\n" "${certname}" >> "${xbasedir}/active"
 
 fi
