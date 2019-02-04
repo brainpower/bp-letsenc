@@ -127,6 +127,36 @@ function exec_post_renew_d(){
 	done
 }
 
+
+# split a certificate bundle into the certificate and the intermediates.
+# output files will be completely overwritten!
+# $1: the source file, cert + intermediates as pem
+# $2: the name of the file to write the certificate to
+# $3: the name of the file to write the intermediates to
+function split_cert(){
+  printf "" > "$2"
+  printf "" > "$3"
+  awk '
+    BEGIN { n=0; p=0 }
+    /-----BEGIN CERTIFICATE-----/ { n++; p=1 }
+    {
+      if ( p > 0 ){
+        if( n == 1 ) {
+          print > "'"$2"'"
+        } else {
+          print >> "'"$3"'"
+        }
+      }
+    }
+    /-----END CERTIFICATE-----/ { p=0 }
+  ' < "$1"
+}
+
+
+##########
+#  main  #
+##########
+
 if [[ $action = "renew" ]]; then
 	if [[ ! -d "$basedir" ]]; then
 		printf "ERROR: %s does not exist!\n" "$basedir" >&2
@@ -142,19 +172,26 @@ if [[ $action = "renew" ]]; then
 	chmod "${dirmode}" "${newdir}"
 	cd "${newdir}"
 
-	python "${acmebin}" --account-key "${acckey}" --acme-dir "${acmedir}" --csr "${basedir}/request.csr" > certificate.crt
+	python "${acmebin}" \
+	  --account-key "${acckey}" \
+	  --acme-dir "${acmedir}" \
+	  --csr "${basedir}/request.csr" \
+	    > "${newdir}/full-bundle.crt"
 
 	if [[ $? == 0 ]]; then
 
-		cp -ar "${basedir}/private.key"      "${newdir}/private.key"
-		cp -ar "${basedir}/intermediate.pem" "${newdir}/ca-bundle.crt"
-		cat    "${newdir}/certificate.crt"   "${newdir}/ca-bundle.crt" > "${newdir}/full-bundle.crt"
-		cat    "${newdir}/private.key"       "${newdir}/certificate.crt"   "${newdir}/ca-bundle.crt" > "${newdir}/key-bundle.crt"
+    split_cert "${newdir}/full-bundle.crt" \
+      "${newdir}/certificate.crt" \
+      "${newdir}/ca-bundle.crt"
+
+		cp -a "${basedir}/private.key" "${newdir}/private.key"
+		cat   "${newdir}/private.key"  "${newdir}/full-bundle.crt" > "${newdir}/key-bundle.crt"
 
 		cd "${basedir}"
 		ln -Tfs "${newdir}" live
 
 		if [[ -n "${services}" ]]; then
+		  printf "WARNING: Using the services array is deprecated, use a post-renew.d script instead.\n" >&2
 			sudo systemctl reload "${services[@]}"
 		fi
 		exec_post_renew_d "${script_dir}" "${basedir}"
@@ -221,14 +258,6 @@ elif [[ $action = "create-cert" ]]; then
 
 	printf "Generating new CSR...\n"
 	openssl req -new -sha256 -key "private.key" -subj "${subject}" -reqexts SAN -config openssl.cnf > request.csr
-
-	if [[ ! -e ../intermediate.pem ]]; then
-		printf "Downloading intermediate cert...\n"
-		wget https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem.txt -O ../intermediate.pem
-	fi
-
-	printf "Linking intermediate cert...\n"
-	ln -s ../intermediate.pem
 
 	printf "Use '%s renew %s' now to request the new certificate..." "$0" "${certname}"
 
