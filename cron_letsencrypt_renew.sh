@@ -28,9 +28,16 @@ xbasedir="/var/local/letse/"
 # renew X days prior to expiry of crt
 renew_before=20
 
+# do dry run?
+dry=0
+
 # read configuration from config.zsh if readable
 if [[ -r "${script_dir}/config.zsh" ]]; then
   source "${script_dir}/config.zsh"
+fi
+
+if [[ "$1" == "-n" ]]; then
+  dry=1
 fi
 
 
@@ -43,6 +50,10 @@ for cert in $(cat "${xbasedir}"/active); do
   diffdays=$(( diff / 86400 ))
 
   if [[ $diffdays -le $renew_before ]]; then
-    "${script_dir}"/bp-lets.zsh renew "$cert"
+    if [[ "$dry" -gt 0 ]]; then
+      printf "DRY RUN: Would renew %s (valid days left: %d)\n" "$cert" "$diffdays"
+    else
+      "${script_dir}"/bp-lets.zsh renew "$cert"
+    fi
   fi
 done
