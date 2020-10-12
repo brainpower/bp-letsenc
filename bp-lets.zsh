@@ -1,5 +1,6 @@
 #!/bin/zsh
-
+# {{{ copyright and usage
+#
 ## Copyright (c) 2017-2019 brainpower <brainpower at mailbox dot org>
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,6 +39,7 @@ action="$1"
 certname="$2"
 script_dir="$(dirname $(readlink -f "${0}"))"
 
+# }}}
 
 # set a variable if it is unset or empty
 # $1: name of the variable
@@ -179,7 +181,8 @@ if [[ $action = "renew" ]]; then
     --csr "${basedir}/request.csr" \
       > "${newdir}/full-bundle.crt"
 
-  if [[ $? == 0 ]]; then
+  ret=$?
+  if [[ $ret == 0 ]]; then
 
     split_cert "${newdir}/full-bundle.crt" \
       "${newdir}/certificate.crt" \
@@ -191,11 +194,18 @@ if [[ $action = "renew" ]]; then
     cd "${basedir}"
     ln -Tfs "${newdir}" live
 
+    exec_post_renew_d "${script_dir}" "${basedir}" "${xbasedir}"
+
     if [[ -n "${services}" ]]; then
       printf "WARNING: Using the services array is deprecated, use a post-renew.d script instead.\n" >&2
-      sudo systemctl reload "${services[@]}"
+      for service in "${services[@]}"; do
+        if sudo systemctl is-active -q "${service}"; then
+          sudo systemctl restart "${service}"
+        fi
+      done
     fi
-    exec_post_renew_d "${script_dir}" "${basedir}"
+  else
+    printf "WARNING: acme_tiny.py failed with code: %s\n" "$ret"  >&2
   fi
 
 
@@ -260,7 +270,7 @@ elif [[ $action = "create-cert" ]]; then
   printf "Generating new CSR...\n"
   openssl req -new -sha256 -key "private.key" -subj "${subject}" -reqexts SAN -config openssl.cnf > request.csr
 
-  printf "Use '%s renew %s' now to request the new certificate..." "$0" "${certname}"
+  printf "Use '%s renew %s' now to request the new certificate...\n" "$0" "${certname}"
 
   printf "%s\n" "${certname}" >> "${xbasedir}/active"
 
