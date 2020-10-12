@@ -173,7 +173,7 @@ if [[ $action = "renew" ]]; then
   mkdir -p "${newdir}"
   chmod "${dirmode}" "${newdir}"
   if ! cd "${newdir}"; then
-    printf "ERROR: Changing directory failed: %s\n" "${newdir}"
+    printf "ERROR: Changing directory failed: %s\n" "${newdir}" >&2
     exit 2
   fi
 
