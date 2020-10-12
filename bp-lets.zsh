@@ -172,24 +172,28 @@ if [[ $action = "renew" ]]; then
 
   mkdir -p "${newdir}"
   chmod "${dirmode}" "${newdir}"
-  cd "${newdir}"
+  if ! cd "${newdir}"; then
+    printf "ERROR: Changing directory failed: %s\n" "${newdir}"
+    exit 2
+  fi
 
   python "${acmebin}" \
     --quiet \
     --account-key "${acckey}" \
     --acme-dir "${acmedir}" \
     --csr "${basedir}/request.csr" \
-      > "${newdir}/full-bundle.crt"
+      > "full-bundle.crt"
 
   ret=$?
   if [[ $ret == 0 ]]; then
 
-    split_cert "${newdir}/full-bundle.crt" \
-      "${newdir}/certificate.crt" \
-      "${newdir}/ca-bundle.crt"
+    split_cert "full-bundle.crt" \
+               "certificate.crt" \
+               "ca-bundle.crt"
 
-    cp -a "${basedir}/private.key" "${newdir}/private.key"
-    cat   "${newdir}/private.key"  "${newdir}/full-bundle.crt" > "${newdir}/key-bundle.crt"
+    cp -a "${basedir}/private.key" "private.key"
+
+    cat "private.key" "full-bundle.crt" > "key-bundle.crt"
 
     cd "${basedir}"
     ln -Tfs "${newdir}" live
