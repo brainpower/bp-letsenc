@@ -24,9 +24,15 @@ script_dir="$(dirname $(readlink -f "${0}"))"
 
 # directory containing the certificate subdirectories
 xbasedir="/var/local/letse/"
+logfile="${xbasedir}/renew.log"
 
 # renew X days prior to expiry of crt
 renew_before=20
+warn_before=7
+
+warn_mail=""
+warn_message="Certificate %s on %s has only %d valid days left.\nRenew seems to have failed repeatedly. Please check.\n"
+renew_message="\n[$(date "+%F %T")] %s: %s (valid days left: %d)\n"
 
 # do dry run?
 dry=0
@@ -49,11 +55,30 @@ for cert in $(cat "${xbasedir}"/active); do
   diff=$(( expiresAt - now  ))
   diffdays=$(( diff / 86400 ))
 
+  if [[ -n "$warn_mail" ]]; then
+    if [[ $diffdays -le $warn_before ]]; then
+      if [[ $dry -gt 0 ]]; then
+        printf "$warn_message" "$cert" "$(hostname --fqdn)" "$diffdays"
+      else
+        printf "$warn_message" "$cert" "$(hostname --fqdn)" "$diffdays" \
+          | mail -s "LE-RENEW: Problem with ${cert}" "$warn_mail"
+      fi
+    fi
+  fi
+
   if [[ $diffdays -le $renew_before ]]; then
     if [[ "$dry" -gt 0 ]]; then
+
+      printf "$renew_message" "DRY RUN" "$cert" "$diffdays" >> "${logfile}"
+
       printf "DRY RUN: Would renew %s (valid days left: %d)\n" "$cert" "$diffdays"
+
     else
+
+      printf "$renew_message" "RENEW" "$cert" "$diffdays" >> "${logfile}"
+
       "${script_dir}"/bp-lets.zsh renew "$cert"
+
     fi
   fi
 done
