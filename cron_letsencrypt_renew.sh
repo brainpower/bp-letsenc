@@ -77,7 +77,7 @@ for cert in $(cat "${xbasedir}"/active); do
 
       printf "$renew_message" "RENEW" "$cert" "$diffdays" >> "${logfile}"
 
-      "${script_dir}"/bp-lets.zsh renew "$cert"
+      "${script_dir}"/bp-lets.zsh renew "$cert" >> "${logfile}" 2>&1
 
     fi
   fi

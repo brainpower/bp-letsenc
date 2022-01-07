@@ -118,11 +118,15 @@ function check_files_readable() {
 # execute scripts in post-renew.d if any exist
 # $@: a list of dirs with a post-renew.d folder with scripts in them
 function exec_post_renew_d(){
+  local dir
   for dir in "$@"; do
     if [[ -d "${dir}/post-renew.d/" ]]; then
       find "${dir}/post-renew.d/" -type f -print0 | while read -d $'\0' dfile; do
         if [[ -x "$dfile" ]]; then
+          printf "INFO: running post-renew.d/%s\n" "$(basename "$dfile")" >&2
           "$dfile" "${basedir}/live/" "$certname"
+        else
+          printf "INFO: skipping post-renew.d/%s - forgot to chmod +x?\n" "$(basename "$dfile")" >&2
         fi
       done
     fi
