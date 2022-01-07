@@ -177,7 +177,7 @@ if [[ $action = "renew" ]]; then
     exit 2
   fi
 
-  python "${acmebin}" \
+  python3 "${acmebin}" \
     --quiet \
     --account-key "${acckey}" \
     --acme-dir "${acmedir}" \
