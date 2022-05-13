@@ -121,7 +121,7 @@ function exec_post_renew_d(){
   local dir
   for dir in "$@"; do
     if [[ -d "${dir}/post-renew.d/" ]]; then
-      find "${dir}/post-renew.d/" -type f -print0 | while read -d $'\0' dfile; do
+      find "${dir}/post-renew.d/" \( -type f -o -type l \) -print0 | while read -d $'\0' dfile; do
         if [[ -x "$dfile" ]]; then
           printf "INFO: running post-renew.d/%s\n" "$(basename "$dfile")" >&2
           "$dfile" "${basedir}/live/" "$certname"
@@ -261,6 +261,7 @@ elif [[ $action = "create-cert" ]]; then
   mkdir -p "$basedir"
   chmod "${dirmode}" "${basedir}"
   cd "${basedir}" || exit 1
+  mkdir -p "post-renew.d"
 
   subject="/CN=${domains[1]}"
   cp "${openssl_cnf}" openssl.cnf
