@@ -158,6 +158,42 @@ function split_cert(){
   ' < "$1"
 }
 
+# ask the user to input a list of domains
+# that list is stored into an array named domains
+gather_domains() {
+  domains=()
+  printf "Please enter all domains you want (don't forget www. !; empty string submits):\n"
+  while IFS= read -r dom; do
+    if [[ -z "$dom" ]]; then
+      break
+    fi
+    domains+=( "$dom" )
+  done
+  printf "Entered domains are:\n"
+  for dom in "${domains[@]}"; do
+    printf "* '%s'\n" $dom
+  done
+  printf "Continue? [Yn] "
+  read
+  if [[ $REPLY =~ [Nn][Oo]* ]]; then
+    exit 1
+  fi
+}
+
+# print an openssl.cnf generated from domains array to given file
+generate_csr(){
+  local subject
+  subject="/CN=${domains[1]}"
+  cp "${openssl_cnf}" openssl.cnf
+  printf "[SAN]\nsubjectAltName=" >> openssl.cnf
+  for dom in "${domains[@]}"; do
+    printf "DNS:%s," "$dom" >> openssl.cnf
+  done
+  printf "\n" >> openssl.cnf
+  sed '/subjectAltName/s@,$@@' -i openssl.cnf
+
+  openssl req -new -sha256 -key "private.key" -subj "${subject}" -reqexts SAN -config openssl.cnf > request.csr
+}
 
 ##########
 #  main  #
@@ -239,45 +275,40 @@ elif [[ $action = "create-cert" ]]; then
     exit 1
   fi
 
-  domains=()
-  printf "Please enter all domains you want (don't forget www. !; empty string submits):\n"
-  while IFS= read -r dom; do
-    if [[ -z "$dom" ]]; then
-      break
-    fi
-    domains+=( "$dom" )
-  done
-  printf "Entered domains are:\n"
-  for dom in "${domains[@]}"; do
-    printf "* '%s'\n" $dom
-  done
-  printf "Continue? [Yn] "
-  read
-  if [[ $REPLY =~ [Nn][Oo]* ]]; then
-    exit 1
-  fi
-
+  gather_domains
 
   mkdir -p "$basedir"
   chmod "${dirmode}" "${basedir}"
   cd "${basedir}" || exit 1
   mkdir -p "post-renew.d"
 
-  subject="/CN=${domains[1]}"
-  cp "${openssl_cnf}" openssl.cnf
-  printf "[SAN]\nsubjectAltName=" >> openssl.cnf
-  for dom in "${domains[@]}"; do
-    printf "DNS:%s," "$dom" >> openssl.cnf
-  done
-  printf "\n" >> openssl.cnf
-  sed '/subjectAltName/s@,$@@' -i openssl.cnf
-
 
   printf "Generating new private key...\n"
   openssl genrsa "$keysize" > "private.key"
 
   printf "Generating new CSR...\n"
-  openssl req -new -sha256 -key "private.key" -subj "${subject}" -reqexts SAN -config openssl.cnf > request.csr
+  generate_csr
+
+  printf "Use '%s renew %s' now to request the new certificate...\n" "$0" "${certname}"
+
+  printf "%s\n" "${certname}" >> "${xbasedir}/active"
+
+elif [[ $action = "change-cert" ]]; then
+  if [[ ! -d "$basedir" ]]; then
+    printf "ERROR: %s does not exist!\n" "$basedir" >&2
+    printf "Use 'create-cert' action to create one.\n" >&2
+    exit 1
+  fi
+  cd "${basedir}" || exit 1
+  if [[ ! -f "private.key" ]]; then
+    printf "ERROR: No private.key found in: %s" "${basedir}" >&2
+    exit 1
+  fi
+
+  gather_domains
+
+  printf "Generating new CSR...\n"
+  generate_csr
 
   printf "Use '%s renew %s' now to request the new certificate...\n" "$0" "${certname}"
 
