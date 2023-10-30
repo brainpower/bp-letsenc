@@ -160,9 +160,11 @@ function split_cert(){
 
 # ask the user to input a list of domains
 # that list is stored into an array named domains
+# this will overwrite the global variable/array 'domains' if it exists
+# $1: message to display
 gather_domains() {
   domains=()
-  printf "Please enter all domains you want (don't forget www. !; empty string submits):\n"
+  printf "%s\n" "$1"
   while IFS= read -r dom; do
     if [[ -z "$dom" ]]; then
       break
@@ -275,7 +277,8 @@ elif [[ $action = "create-cert" ]]; then
     exit 1
   fi
 
-  gather_domains
+  gather_domains "Please enter all domains you want
+ (don't forget www. !; first one used as CN; empty line submits):"
 
   mkdir -p "$basedir"
   chmod "${dirmode}" "${basedir}"
@@ -289,7 +292,7 @@ elif [[ $action = "create-cert" ]]; then
   printf "Generating new CSR...\n"
   generate_csr
 
-  printf "Use '%s renew %s' now to request the new certificate...\n" "$0" "${certname}"
+  printf "Use '%s renew %s' now to request the new certificate...\n" "$(basename "$0")" "${certname}"
 
   printf "%s\n" "${certname}" >> "${xbasedir}/active"
 
@@ -305,13 +308,52 @@ elif [[ $action = "change-cert" ]]; then
     exit 1
   fi
 
-  gather_domains
+  gather_domains "Please enter all domains you want, replacing the old ones!
+ (don't forget www. !; first one used as CN; empty line submits):"
 
   printf "Generating new CSR...\n"
   generate_csr
 
-  printf "Use '%s renew %s' now to request the new certificate...\n" "$0" "${certname}"
+  printf "Use '%s renew %s' now to request the new certificate...\n" "$(basename "$0")" "${certname}"
 
   printf "%s\n" "${certname}" >> "${xbasedir}/active"
 
+elif [[ $action = "recreate-csr" ]]; then
+  if ! [[ -d "$basedir" ]]; then
+    printf "ERROR: %s does not exist!\n" "$basedir" >&2
+    printf "Create a new certificate using 'create-cert' action.\n" >&2
+    exit 1
+  fi
+  cd "${basedir}" || exit 1
+  if [[ ! -f "private.key" ]]; then
+    printf "ERROR: No private.key found in: %s" "${basedir}" >&2
+    exit 1
+  fi
+  if ! [[ -r "openssl.cnf" ]]; then
+    printf "ERROR: openssl.cnf is not readable. Is this really a cert created with this script?\n" >&2
+    exit 1
+  fi
+
+  subject="$(openssl req -in request.csr -noout -subject | sed 's@^subject=.*CN = \([^ ]\+\)@\1@')"
+  printf "Previous subject domain (CN) was: %s\nContinue using it? [Yn] " "$subject"
+  read
+  if [[ $REPLY =~ [Nn][Oo]* ]]; then
+    printf "Enter new subject domain (CN): "
+    read subject
+  fi
+  if [[ -z ${subject} ]]; then
+    printf "ERROR: empty subject!\n" >&2
+    exit 1
+  fi
+
+  printf "Will open an editor now so you can edit the SANs at the end of the file.\n"
+  printf "Press any key to continue...\n"
+  read
+
+  ${EDITOR:-vim} openssl.cnf
+
+  printf "Generating new CSR...\n"
+  openssl req -new -sha256 -key "private.key" -subj "/CN=${subject}" -reqexts SAN -config openssl.cnf > request.csr
+
+  printf "Use '%s renew %s' now to request a new certificate...\n" "$(basename "$0")" "${certname}"
 fi
